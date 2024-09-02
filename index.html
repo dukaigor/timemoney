@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TimeMoney</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
@@ -10,62 +10,93 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             line-height: 1.6;
             margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
+            padding: 0;
+            background-color: #F2F2F7;
+            color: #000000;
         }
         .container {
-            max-width: 800px;
+            max-width: 414px;
             margin: auto;
-            background: white;
+            background: #FFFFFF;
+            min-height: 100vh;
+        }
+        .header {
+            background-color: #F2F2F7;
+            padding: 16px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 17px;
+            border-bottom: 1px solid #C6C6C8;
+        }
+        .content {
             padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        h1, h2 {
-            color: #333;
+        h1 {
+            font-size: 34px;
+            font-weight: 700;
+            margin-bottom: 16px;
         }
-        input, select, button {
+        h2 {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        input, select {
             width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
+            padding: 12px;
+            margin-bottom: 16px;
+            border: 1px solid #C6C6C8;
+            border-radius: 10px;
+            font-size: 17px;
         }
         button {
-            background-color: #4CAF50;
+            width: 100%;
+            padding: 16px;
+            background-color: #007AFF;
             color: white;
             border: none;
+            border-radius: 10px;
+            font-size: 17px;
+            font-weight: 600;
             cursor: pointer;
+            margin-bottom: 16px;
         }
         button:hover {
-            background-color: #45a049;
+            background-color: #0056b3;
         }
         .tab {
-            overflow: hidden;
-            border: 1px solid #ccc;
-            background-color: #f1f1f1;
+            display: flex;
+            justify-content: space-around;
+            background-color: #F2F2F7;
+            padding: 10px 0;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            max-width: 414px;
         }
         .tab button {
-            background-color: inherit;
-            float: left;
+            background-color: transparent;
+            color: #007AFF;
             border: none;
             outline: none;
             cursor: pointer;
             padding: 14px 16px;
             transition: 0.3s;
-        }
-        .tab button:hover {
-            background-color: #ddd;
+            font-size: 12px;
+            font-weight: 500;
+            width: auto;
+            margin-bottom: 0;
         }
         .tab button.active {
-            background-color: #ccc;
+            color: #007AFF;
+            border-top: 2px solid #007AFF;
         }
         .tabcontent {
             display: none;
-            padding: 6px 12px;
-            border: 1px solid #ccc;
-            border-top: none;
+            padding: 20px 0;
         }
         #loginSection, #appSection {
             display: none;
@@ -73,57 +104,71 @@
         .task {
             display: flex;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 16px;
+            background-color: #FFFFFF;
+            padding: 12px;
+            border-radius: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         .task input[type="checkbox"] {
-            margin-right: 10px;
+            margin-right: 12px;
+            width: 20px;
+            height: 20px;
+        }
+        #financialChart {
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div id="loginSection">
+        <div id="loginSection" class="content">
             <h1>Bun venit la TimeMoney</h1>
             <button id="loginButton">Conectare cu Google</button>
         </div>
 
         <div id="appSection">
-            <h1>Bine ați venit, <span id="userName"></span>!</h1>
-            <button id="logoutButton">Deconectare</button>
+            <div class="header">
+                TimeMoney
+            </div>
+            <div class="content">
+                <h1>Bine ați venit, <span id="userName"></span>!</h1>
+                <button id="logoutButton">Deconectare</button>
+
+                <div id="Sarcini" class="tabcontent">
+                    <h2>Lista de sarcini</h2>
+                    <input type="text" id="newTask" placeholder="Adaugă o sarcină nouă">
+                    <button onclick="addTask()">Adaugă sarcină</button>
+                    <div id="taskList"></div>
+                </div>
+
+                <div id="Incasari" class="tabcontent">
+                    <h2>Încasări</h2>
+                    <select id="incomeCategory"></select>
+                    <input type="number" id="incomeAmount" placeholder="Suma">
+                    <button onclick="addIncome()">Adaugă încasare</button>
+                    <div id="incomeList"></div>
+                </div>
+
+                <div id="Cheltuieli" class="tabcontent">
+                    <h2>Cheltuieli</h2>
+                    <select id="expenseCategory"></select>
+                    <input type="number" id="expenseAmount" placeholder="Suma">
+                    <button onclick="addExpense()">Adaugă cheltuială</button>
+                    <div id="expenseList"></div>
+                </div>
+
+                <div id="Raport" class="tabcontent">
+                    <h2>Raport Financiar</h2>
+                    <canvas id="financialChart"></canvas>
+                </div>
+            </div>
 
             <div class="tab">
                 <button class="tablinks" onclick="openTab(event, 'Sarcini')">Sarcini</button>
                 <button class="tablinks" onclick="openTab(event, 'Incasari')">Încasări</button>
                 <button class="tablinks" onclick="openTab(event, 'Cheltuieli')">Cheltuieli</button>
                 <button class="tablinks" onclick="openTab(event, 'Raport')">Raport</button>
-            </div>
-
-            <div id="Sarcini" class="tabcontent">
-                <h2>Lista de sarcini</h2>
-                <input type="text" id="newTask" placeholder="Adaugă o sarcină nouă">
-                <button onclick="addTask()">Adaugă sarcină</button>
-                <div id="taskList"></div>
-            </div>
-
-            <div id="Incasari" class="tabcontent">
-                <h2>Încasări</h2>
-                <select id="incomeCategory"></select>
-                <input type="number" id="incomeAmount" placeholder="Suma">
-                <button onclick="addIncome()">Adaugă încasare</button>
-                <div id="incomeList"></div>
-            </div>
-
-            <div id="Cheltuieli" class="tabcontent">
-                <h2>Cheltuieli</h2>
-                <select id="expenseCategory"></select>
-                <input type="number" id="expenseAmount" placeholder="Suma">
-                <button onclick="addExpense()">Adaugă cheltuială</button>
-                <div id="expenseList"></div>
-            </div>
-
-            <div id="Raport" class="tabcontent">
-                <h2>Raport Financiar</h2>
-                <canvas id="financialChart"></canvas>
             </div>
         </div>
     </div>
@@ -159,11 +204,17 @@
 
         loginButton.addEventListener('click', () => {
             const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider);
+            auth.signInWithPopup(provider).catch(error => {
+                console.error("Eroare la autentificare:", error);
+                alert("Eroare la autentificare. Vă rugăm să încercați din nou.");
+            });
         });
 
         logoutButton.addEventListener('click', () => {
-            auth.signOut();
+            auth.signOut().catch(error => {
+                console.error("Eroare la deconectare:", error);
+                alert("Eroare la deconectare. Vă rugăm să încercați din nou.");
+            });
         });
 
         auth.onAuthStateChanged(user => {
@@ -185,18 +236,30 @@
             db.collection('users').doc(currentUser.uid).get().then(doc => {
                 if (doc.exists) {
                     userData = doc.data();
-                    renderTasks();
-                    renderIncomes();
-                    renderExpenses();
-                    renderFinancialReport();
                 } else {
+                    userData = {
+                        tasks: [],
+                        incomes: {},
+                        expenses: {}
+                    };
                     db.collection('users').doc(currentUser.uid).set(userData);
                 }
+                renderTasks();
+                renderIncomes();
+                renderExpenses();
+                renderFinancialReport();
+            }).catch(error => {
+                console.error("Eroare la încărcarea datelor:", error);
+                alert("Eroare la încărcarea datelor. Vă rugăm să reîncărcați pagina.");
             });
         }
 
         function saveUserData() {
-            db.collection('users').doc(currentUser.uid).set(userData);
+            db.collection('users').doc(currentUser.uid).set(userData)
+                .catch(error => {
+                    console.error("Eroare la salvarea datelor:", error);
+                    alert("Eroare la salvarea datelor. Vă rugăm să încercați din nou.");
+                });
         }
 
         function addTask() {
@@ -309,14 +372,14 @@
                         label: 'Sumar Financiar',
                         data: [totalIncome, totalExpense, totalIncome - totalExpense],
                         backgroundColor: [
-                            'rgba(75, 192, 192, 0.2)',
-                            'rgba(255, 99, 132, 0.2)',
-                            'rgba(255, 206, 86, 0.2)'
+                            'rgba(0, 122, 255, 0.2)',
+                            'rgba(255, 59, 48, 0.2)',
+                            'rgba(52, 199, 89, 0.2)'
                         ],
                         borderColor: [
-                            'rgba(75, 192, 192, 1)',
-                            'rgba(255, 99, 132, 1)',
-                            'rgba(255, 206, 86, 1)'
+                            'rgba(0, 122, 255, 1)',
+                            'rgba(255, 59, 48, 1)',
+                            'rgba(52, 199, 89, 1)'
                         ],
                         borderWidth: 1
                     }]
@@ -350,7 +413,9 @@
         }
 
         // Deschide tab-ul "Sarcini" în mod implicit
-        document.getElementsByClassName("tablinks")[0].click();
+        document.addEventListener('DOMContentLoaded', (event) => {
+            document.getElementsByClassName("tablinks")[0].click();
+        });
     </script>
 </body>
 </html>
