@@ -203,7 +203,6 @@
             <input type="password" id="loginPassword" placeholder="Parolă">
             <div id="loginError" class="error-message"></div>
             <button id="loginButton">Conectare</button>
-            <button id="loginWithGoogleButton">Conectare cu Google</button>
             <div class="auth-switch">
                 Nu aveți cont? <a href="#" id="showRegister">Înregistrați-vă</a>
             </div>
@@ -212,6 +211,12 @@
         <div id="registerSection" class="content">
             <h1>Creați cont</h1>
             <h2>Înregistrare în TimeMoney</h2>
+            <input type="text" id="registerName" placeholder="Nume">
+            <select id="registerPersonType">
+                <option value="">Selectați tipul de persoană</option>
+                <option value="fizica">Persoană Fizică</option>
+                <option value="juridica">Persoană Juridică</option>
+            </select>
             <input type="email" id="registerEmail" placeholder="Email">
             <input type="password" id="registerPassword" placeholder="Parolă">
             <div id="registerError" class="error-message"></div>
@@ -290,7 +295,6 @@
         const appSection = document.getElementById('appSection');
         const userNameSpan = document.getElementById('userName');
         const loginButton = document.getElementById('loginButton');
-        const loginWithGoogleButton = document.getElementById('loginWithGoogleButton');
         const registerButton = document.getElementById('registerButton');
         const logoutButton = document.getElementById('logoutButton');
         const showRegisterLink = document.getElementById('showRegister');
@@ -311,27 +315,21 @@
                 });
         }
 
-        function loginWithGoogle() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider)
-                .then((result) => {
-                    // Autentificare Google reușită
-                    const user = result.user;
-                    console.log("Autentificare Google reușită:", user);
-                })
-                .catch((error) => {
-                    // Eroare la autentificarea Google
-                    const errorMessage = error.message;
-                    document.getElementById('loginError').textContent = errorMessage;
-                });
-        }
-
-        function register(email, password) {
+        function register(email, password, name, personType) {
             auth.createUserWithEmailAndPassword(email, password)
                 .then((userCredential) => {
                     // Înregistrare reușită
                     const user = userCredential.user;
                     console.log("Înregistrare reușită:", user);
+                    // Salvare informații suplimentare în Firestore
+                    return db.collection('users').doc(user.uid).set({
+                        name: name,
+                        personType: personType,
+                        email: email
+                    });
+                })
+                .then(() => {
+                    console.log("Informații utilizator salvate în Firestore");
                 })
                 .catch((error) => {
                     // Eroare la înregistrare
@@ -359,12 +357,16 @@
             login(email, password);
         });
 
-        loginWithGoogleButton.addEventListener('click', loginWithGoogle);
-
         registerButton.addEventListener('click', () => {
             const email = document.getElementById('registerEmail').value;
             const password = document.getElementById('registerPassword').value;
-            register(email, password);
+            const name = document.getElementById('registerName').value;
+            const personType = document.getElementById('registerPersonType').value;
+            if (!name || !personType) {
+                document.getElementById('registerError').textContent = "Vă rugăm să completați toate câmpurile.";
+                return;
+            }
+            register(email, password, name, personType);
         });
 
         logoutButton.addEventListener('click', logout);
@@ -389,7 +391,6 @@
                 loginSection.style.display = 'none';
                 registerSection.style.display = 'none';
                 appSection.style.display = 'block';
-                userNameSpan.textContent = user.displayName || user.email;
                 loadUserData(user);
             } else {
                 // Utilizator neautentificat
@@ -405,15 +406,14 @@
                 .then((doc) => {
                     if (doc.exists) {
                         const userData = doc.data();
-                        // Încărcați datele utilizatorului în interfață
+                        userNameSpan.textContent = userData.name;
+                        // Încă
+
+rcați datele utilizatorului în interfață
                         console.log("Date utilizator:", userData);
+                        renderTasks(userData.tasks || []);
                     } else {
-                        // Creați un document nou pentru utilizator
-                        db.collection('users').doc(user.uid).set({
-                            tasks: [],
-                            incomes: {},
-                            expenses: {}
-                        });
+                        console.log("Nu s-au găsit date pentru utilizator");
                     }
                 })
                 .catch((error) => {
@@ -436,6 +436,36 @@
                     loadUserData(auth.currentUser);
                 }).catch((error) => {
                     console.error("Eroare la adăugarea sarcinii:", error);
+                });
+            }
+        }
+
+        function renderTasks(tasks) {
+            const taskList = document.getElementById('taskList');
+            taskList.innerHTML = '';
+            tasks.forEach((task, index) => {
+                const taskElement = document.createElement('div');
+                taskElement.className = 'task';
+                taskElement.innerHTML = `
+                    <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask(${index})">
+                    <span ${task.completed ? 'style="text-decoration: line-through;"' : ''}>${task.text}</span>
+                `;
+                taskList.appendChild(taskElement);
+            });
+        }
+
+        function toggleTask(index) {
+            if (auth.currentUser) {
+                db.collection('users').doc(auth.currentUser.uid).get().then((doc) => {
+                    if (doc.exists) {
+                        const tasks = doc.data().tasks || [];
+                        tasks[index].completed = !tasks[index].completed;
+                        return db.collection('users').doc(auth.currentUser.uid).update({ tasks });
+                    }
+                }).then(() => {
+                    loadUserData(auth.currentUser);
+                }).catch((error) => {
+                    console.error("Eroare la actualizarea sarcinii:", error);
                 });
             }
         }
