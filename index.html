@@ -4,12 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TimeMoney</title>
+    <link rel="icon" type="image/png" href="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/timemoney-DkSa18j8FHurAVDXFp1Opi9NyFlQK6.png">
+    <link rel="apple-touch-icon" href="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/timemoney-DkSa18j8FHurAVDXFp1Opi9NyFlQK6.png">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <link rel="manifest" href="/manifest.json">
     <style>
         :root {
-            --primary-color: #007AFF;
+            --primary-color: #2D2D2C;
             --background-color: #F2F2F7;
             --text-color: #000000;
             --border-color: #C6C6C8;
@@ -82,7 +86,7 @@
         input:focus, select:focus {
             outline: none;
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
+            box-shadow: 0 0 0 2px rgba(45, 45, 44, 0.2);
         }
 
         button {
@@ -97,10 +101,17 @@
             cursor: pointer;
             margin-bottom: 16px;
             transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         button:hover {
-            background-color: #0056b3;
+            background-color: #1a1a1a;
+        }
+
+        button i {
+            margin-right: 8px;
         }
 
         .tab {
@@ -202,7 +213,7 @@
             <input type="email" id="loginEmail" placeholder="Email">
             <input type="password" id="loginPassword" placeholder="Parolă">
             <div id="loginError" class="error-message"></div>
-            <button id="loginButton">Conectare</button>
+            <button id="loginButton"><i class="fas fa-sign-in-alt"></i> Conectare</button>
             <div class="auth-switch">
                 Nu aveți cont? <a href="#" id="showRegister">Înregistrați-vă</a>
             </div>
@@ -211,7 +222,7 @@
         <div id="registerSection" class="content">
             <h1>Creați cont</h1>
             <h2>Înregistrare în TimeMoney</h2>
-            <input type="text" id="registerName" placeholder="Nume">
+            <input type="text" id="registerName" placeholder="Nume complet">
             <select id="registerPersonType">
                 <option value="">Selectați tipul de persoană</option>
                 <option value="fizica">Persoană Fizică</option>
@@ -220,7 +231,7 @@
             <input type="email" id="registerEmail" placeholder="Email">
             <input type="password" id="registerPassword" placeholder="Parolă">
             <div id="registerError" class="error-message"></div>
-            <button id="registerButton">Înregistrare</button>
+            <button id="registerButton"><i class="fas fa-user-plus"></i> Înregistrare</button>
             <div class="auth-switch">
                 Aveți deja cont? <a href="#" id="showLogin">Conectați-vă</a>
             </div>
@@ -228,16 +239,16 @@
 
         <div id="appSection">
             <div class="header">
-                TimeMoney
+                <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/timemoney-DkSa18j8FHurAVDXFp1Opi9NyFlQK6.png" alt="TimeMoney Logo" style="height: 30px;">
             </div>
             <div class="content">
                 <h1>Bine ați venit, <span id="userName"></span>!</h1>
-                <button id="logoutButton">Deconectare</button>
+                <button id="logoutButton"><i class="fas fa-sign-out-alt"></i> Deconectare</button>
 
                 <div id="Sarcini" class="tabcontent">
                     <h2>Lista de sarcini</h2>
                     <input type="text" id="newTask" placeholder="Adaugă o sarcină nouă">
-                    <button onclick="addTask()">Adaugă sarcină</button>
+                    <button onclick="addTask()"><i class="fas fa-plus"></i> Adaugă sarcină</button>
                     <div id="taskList"></div>
                 </div>
 
@@ -245,7 +256,7 @@
                     <h2>Încasări</h2>
                     <select id="incomeCategory"></select>
                     <input type="number" id="incomeAmount" placeholder="Suma">
-                    <button onclick="addIncome()">Adaugă încasare</button>
+                    <button onclick="addIncome()"><i class="fas fa-plus"></i> Adaugă încasare</button>
                     <div id="incomeList"></div>
                 </div>
 
@@ -253,7 +264,7 @@
                     <h2>Cheltuieli</h2>
                     <select id="expenseCategory"></select>
                     <input type="number" id="expenseAmount" placeholder="Suma">
-                    <button onclick="addExpense()">Adaugă cheltuială</button>
+                    <button onclick="addExpense()"><i class="fas fa-plus"></i> Adaugă cheltuială</button>
                     <div id="expenseList"></div>
                 </div>
 
@@ -264,10 +275,10 @@
             </div>
 
             <div class="tab">
-                <button class="tablinks" onclick="openTab(event, 'Sarcini')">Sarcini</button>
-                <button class="tablinks" onclick="openTab(event, 'Incasari')">Încasări</button>
-                <button class="tablinks" onclick="openTab(event, 'Cheltuieli')">Cheltuieli</button>
-                <button class="tablinks" onclick="openTab(event, 'Raport')">Raport</button>
+                <button class="tablinks" onclick="openTab(event, 'Sarcini')"><i class="fas fa-tasks"></i> Sarcini</button>
+                <button class="tablinks" onclick="openTab(event, 'Incasari')"><i class="fas fa-money-bill-wave"></i> Încasări</button>
+                <button class="tablinks" onclick="openTab(event, 'Cheltuieli')"><i class="fas fa-shopping-cart"></i> Cheltuieli</button>
+                <button class="tablinks" onclick="openTab(event, 'Raport')"><i class="fas fa-chart-bar"></i> Raport</button>
             </div>
         </div>
     </div>
@@ -300,52 +311,63 @@
         const showRegisterLink = document.getElementById('showRegister');
         const showLoginLink = document.getElementById('showLogin');
 
+        // Categorii de încasări și cheltuieli
+        const incomeCategories = {
+            fizica: ['Salarii', 'Donații'],
+            juridica: ['Parteneriate', 'Campanii de colectare', 'Contracte de servicii sau produse', 'Prestare servicii']
+        };
+
+        const expenseCategories = {
+            fizica: [
+                'Locuință', 'Alimente', 'Transport', 'Sănătate', 'Îmbrăcăminte și încălțăminte',
+                'Educație și dezvoltare personală', 'Divertisment și timp liber', 'Asigurări și economii',
+                'Cadouri și donații', 'Datorii și împrumuturi', 'Cheltuieli personale'
+            ],
+            juridica: [
+                'Impozite', 'Plăți dividente', 'Salarii angajați', 'Investiții', 'Achiziționare business'
+            ]
+        };
+
         // Funcții de autentificare
         function login(email, password) {
             auth.signInWithEmailAndPassword(email, password)
                 .then((userCredential) => {
-                    // Autentificare reușită
-                    const user = userCredential.user;
-                    console.log("Autentificare reușită:", user);
+                    console.log("Autentificare reușită:", userCredential.user);
                 })
                 .catch((error) => {
-                    // Eroare la autentificare
-                    const errorMessage = error.message;
-                    document.getElementById('loginError').textContent = errorMessage;
+                    document.getElementById('loginError').textContent = error.message;
                 });
         }
 
         function register(email, password, name, personType) {
             auth.createUserWithEmailAndPassword(email, password)
                 .then((userCredential) => {
-                    // Înregistrare reușită
-                    const user = userCredential.user;
-                    console.log("Înregistrare reușită:", user);
-                    // Salvare informații suplimentare în Firestore
-                    return db.collection('users').doc(user.uid).set({
+                    console.log("Înregistrare reușită:", userCredential.user);
+                    return db.collection('users').doc(userCredential.user.uid).set({
                         name: name,
                         personType: personType,
-                        email: email
+                        email: email,
+                        tasks: [],
+                        incomes: {},
+                        expenses: {}
                     });
                 })
                 .then(() => {
                     console.log("Informații utilizator salvate în Firestore");
                 })
                 .catch((error) => {
-                    // Eroare la înregistrare
-                    const errorMessage = error.message;
-                    document.getElementById('registerError').textContent = errorMessage;
+                    document.getElementById('registerError').textContent = error.message;
                 });
         }
 
         function logout() {
             auth.signOut()
                 .then(() => {
-                    // Deconectare reușită
-                    console.log("Utilizator deconectat");
+                    console.log("Utiliz
+
+ator deconectat");
                 })
                 .catch((error) => {
-                    // Eroare la deconectare
                     console.error("Eroare la deconectare:", error);
                 });
         }
@@ -362,10 +384,6 @@
             const password = document.getElementById('registerPassword').value;
             const name = document.getElementById('registerName').value;
             const personType = document.getElementById('registerPersonType').value;
-            if (!name || !personType) {
-                document.getElementById('registerError').textContent = "Vă rugăm să completați toate câmpurile.";
-                return;
-            }
             register(email, password, name, personType);
         });
 
@@ -387,13 +405,11 @@
         // Observer pentru starea de autentificare
         auth.onAuthStateChanged((user) => {
             if (user) {
-                // Utilizator autentificat
                 loginSection.style.display = 'none';
                 registerSection.style.display = 'none';
                 appSection.style.display = 'block';
                 loadUserData(user);
             } else {
-                // Utilizator neautentificat
                 loginSection.style.display = 'block';
                 registerSection.style.display = 'none';
                 appSection.style.display = 'none';
@@ -406,19 +422,37 @@
                 .then((doc) => {
                     if (doc.exists) {
                         const userData = doc.data();
-                        userNameSpan.textContent = userData.name;
-                        // Încă
-
-rcați datele utilizatorului în interfață
+                        userNameSpan.textContent = userData.name || user.email;
                         console.log("Date utilizator:", userData);
                         renderTasks(userData.tasks || []);
+                        populateCategories(userData.personType);
                     } else {
-                        console.log("Nu s-au găsit date pentru utilizator");
+                        console.log("Nu există date pentru utilizator");
                     }
                 })
                 .catch((error) => {
                     console.error("Eroare la încărcarea datelor utilizatorului:", error);
                 });
+        }
+
+        function populateCategories(personType) {
+            const incomeSelect = document.getElementById('incomeCategory');
+            const expenseSelect = document.getElementById('expenseCategory');
+
+            incomeSelect.innerHTML = '';
+            expenseSelect.innerHTML = '';
+
+            incomeCategories[personType].forEach(category => {
+                const option = document.createElement('option');
+                option.value = option.textContent = category;
+                incomeSelect.appendChild(option);
+            });
+
+            expenseCategories[personType].forEach(category => {
+                const option = document.createElement('option');
+                option.value = option.textContent = category;
+                expenseSelect.appendChild(option);
+            });
         }
 
         // Funcții pentru gestionarea sarcinilor, veniturilor și cheltuielilor
@@ -460,7 +494,7 @@ rcați datele utilizatorului în interfață
                     if (doc.exists) {
                         const tasks = doc.data().tasks || [];
                         tasks[index].completed = !tasks[index].completed;
-                        return db.collection('users').doc(auth.currentUser.uid).update({ tasks });
+                        return db.collection('users').doc(auth.currentUser.uid).update({ tasks: tasks });
                     }
                 }).then(() => {
                     loadUserData(auth.currentUser);
@@ -519,6 +553,17 @@ rcați datele utilizatorului în interfață
         document.addEventListener('DOMContentLoaded', (event) => {
             document.getElementsByClassName("tablinks")[0].click();
         });
+
+        // Funcție pentru a crea o aplicație web
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
+                    console.log('ServiceWorker înregistrat cu succes: ', registration.scope);
+                }, function(err) {
+                    console.log('Înregistrarea ServiceWorker a eșuat: ', err);
+                });
+            });
+        }
     </script>
 </body>
 </html>
