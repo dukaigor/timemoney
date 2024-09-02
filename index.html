@@ -22,6 +22,7 @@
             margin: auto;
             background: #FFFFFF;
             min-height: 100vh;
+            position: relative;
         }
         .header {
             background-color: #F2F2F7;
@@ -38,6 +39,7 @@
             font-size: 34px;
             font-weight: 700;
             margin-bottom: 16px;
+            color: #007AFF;
         }
         h2 {
             font-size: 22px;
@@ -46,11 +48,18 @@
         }
         input, select {
             width: 100%;
-            padding: 12px;
+            padding: 15px;
             margin-bottom: 16px;
-            border: 1px solid #C6C6C8;
+            border: 1px solid #E5E5EA;
             border-radius: 10px;
             font-size: 17px;
+            background-color: #F2F2F7;
+            transition: all 0.3s ease;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #007AFF;
+            box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
         }
         button {
             width: 100%;
@@ -63,6 +72,7 @@
             font-weight: 600;
             cursor: pointer;
             margin-bottom: 16px;
+            transition: background-color 0.3s ease;
         }
         button:hover {
             background-color: #0056b3;
@@ -79,7 +89,7 @@
         }
         .tab button {
             background-color: transparent;
-            color: #007AFF;
+            color: #8E8E93;
             border: none;
             outline: none;
             cursor: pointer;
@@ -92,13 +102,12 @@
         }
         .tab button.active {
             color: #007AFF;
-            border-top: 2px solid #007AFF;
         }
         .tabcontent {
             display: none;
             padding: 20px 0;
         }
-        #loginSection, #appSection {
+        #loginSection, #registerSection, #appSection {
             display: none;
         }
         .task {
@@ -118,13 +127,45 @@
         #financialChart {
             margin-top: 20px;
         }
+        .auth-switch {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .auth-switch a {
+            color: #007AFF;
+            text-decoration: none;
+        }
+        .error-message {
+            color: #FF3B30;
+            margin-bottom: 16px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div id="loginSection" class="content">
-            <h1>Bun venit la TimeMoney</h1>
-            <button id="loginButton">Conectare cu Google</button>
+            <h1>Bine ați venit</h1>
+            <h2>Conectare la TimeMoney</h2>
+            <input type="email" id="loginEmail" placeholder="Email">
+            <input type="password" id="loginPassword" placeholder="Parolă">
+            <div id="loginError" class="error-message"></div>
+            <button id="loginButton">Conectare</button>
+            <button id="loginWithGoogleButton">Conectare cu Google</button>
+            <div class="auth-switch">
+                Nu aveți cont? <a href="#" id="showRegister">Înregistrați-vă</a>
+            </div>
+        </div>
+
+        <div id="registerSection" class="content">
+            <h1>Creați cont</h1>
+            <h2>Înregistrare în TimeMoney</h2>
+            <input type="email" id="registerEmail" placeholder="Email">
+            <input type="password" id="registerPassword" placeholder="Parolă">
+            <div id="registerError" class="error-message"></div>
+            <button id="registerButton">Înregistrare</button>
+            <div class="auth-switch">
+                Aveți deja cont? <a href="#" id="showLogin">Conectați-vă</a>
+            </div>
         </div>
 
         <div id="appSection">
@@ -196,18 +237,42 @@
             expenses: {}
         };
 
-        const loginButton = document.getElementById('loginButton');
-        const logoutButton = document.getElementById('logoutButton');
         const loginSection = document.getElementById('loginSection');
+        const registerSection = document.getElementById('registerSection');
         const appSection = document.getElementById('appSection');
         const userNameSpan = document.getElementById('userName');
 
+        const loginButton = document.getElementById('loginButton');
+        const loginWithGoogleButton = document.getElementById('loginWithGoogleButton');
+        const registerButton = document.getElementById('registerButton');
+        const logoutButton = document.getElementById('logoutButton');
+        const showRegisterLink = document.getElementById('showRegister');
+        const showLoginLink = document.getElementById('showLogin');
+
         loginButton.addEventListener('click', () => {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            auth.signInWithEmailAndPassword(email, password)
+                .catch(error => {
+                    document.getElementById('loginError').textContent = error.message;
+                });
+        });
+
+        loginWithGoogleButton.addEventListener('click', () => {
             const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider).catch(error => {
-                console.error("Eroare la autentificare:", error);
-                alert("Eroare la autentificare. Vă rugăm să încercați din nou.");
-            });
+            auth.signInWithPopup(provider)
+                .catch(error => {
+                    document.getElementById('loginError').textContent = error.message;
+                });
+        });
+
+        registerButton.addEventListener('click', () => {
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            auth.createUserWithEmailAndPassword(email, password)
+                .catch(error => {
+                    document.getElementById('registerError').textContent = error.message;
+                });
         });
 
         logoutButton.addEventListener('click', () => {
@@ -217,16 +282,30 @@
             });
         });
 
+        showRegisterLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginSection.style.display = 'none';
+            registerSection.style.display = 'block';
+        });
+
+        showLoginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            registerSection.style.display = 'none';
+            loginSection.style.display = 'block';
+        });
+
         auth.onAuthStateChanged(user => {
             if (user) {
                 currentUser = user;
                 loginSection.style.display = 'none';
+                registerSection.style.display = 'none';
                 appSection.style.display = 'block';
-                userNameSpan.textContent = user.displayName;
+                userNameSpan.textContent = user.displayName || user.email;
                 loadUserData();
             } else {
                 currentUser = null;
                 loginSection.style.display = 'block';
+                registerSection.style.display = 'none';
                 appSection.style.display = 'none';
                 userNameSpan.textContent = '';
             }
@@ -294,7 +373,9 @@
         }
 
         const incomeCategories = ['Salarii', 'Donații', 'Parteneriate', 'Campanii de colectare', 'Contracte de servicii sau produse', 'Prestare servicii'];
-        const expenseCategories = ['Locuință', 'Alimente', 'Transport', 'Sănătate', 'Îmbrăcăminte și încălțăminte', 'Educație și dezvoltare personală', 'Divertisment și timp liber', 'Asigurări și economii', 'Cadouri și donații', 'Datorii și împrumuturi', 'Cheltuieli personale'];
+        const expenseCategories = ['Locuință', 'Alimente', 'Transport', 'Sănătate', 'Îmbrăcăminte și încălțăminte', 'Educație și dezvoltare personală', 'Divertisment și timp liber', '
+
+Asigurări și economii', 'Cadouri și donații', 'Datorii și împrumuturi', 'Cheltuieli personale'];
 
         function populateCategories() {
             const incomeSelect = document.getElementById('incomeCategory');
