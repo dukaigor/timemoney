@@ -4,112 +4,139 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TimeMoney</title>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        :root {
+            --primary-color: #007AFF;
+            --background-color: #F2F2F7;
+            --text-color: #000000;
+            --border-color: #C6C6C8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            background-color: #F2F2F7;
-            color: #000000;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
+
         .container {
-            max-width: 414px;
+            max-width: 100%;
             margin: auto;
             background: #FFFFFF;
-            min-height: 100vh;
-            position: relative;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
         }
+
         .header {
-            background-color: #F2F2F7;
+            background-color: var(--background-color);
             padding: 16px;
             text-align: center;
             font-weight: 600;
             font-size: 17px;
-            border-bottom: 1px solid #C6C6C8;
+            border-bottom: 1px solid var(--border-color);
         }
+
         .content {
             padding: 20px;
+            flex-grow: 1;
+            overflow-y: auto;
         }
+
         h1 {
-            font-size: 34px;
+            font-size: 28px;
             font-weight: 700;
             margin-bottom: 16px;
-            color: #007AFF;
+            color: var(--primary-color);
         }
+
         h2 {
             font-size: 22px;
             font-weight: 600;
             margin-bottom: 12px;
         }
+
         input, select {
             width: 100%;
-            padding: 15px;
+            padding: 12px;
             margin-bottom: 16px;
-            border: 1px solid #E5E5EA;
+            border: 1px solid var(--border-color);
             border-radius: 10px;
-            font-size: 17px;
-            background-color: #F2F2F7;
+            font-size: 16px;
+            background-color: var(--background-color);
             transition: all 0.3s ease;
         }
+
         input:focus, select:focus {
             outline: none;
-            border-color: #007AFF;
+            border-color: var(--primary-color);
             box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
         }
+
         button {
             width: 100%;
-            padding: 16px;
-            background-color: #007AFF;
+            padding: 14px;
+            background-color: var(--primary-color);
             color: white;
             border: none;
             border-radius: 10px;
-            font-size: 17px;
+            font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             margin-bottom: 16px;
             transition: background-color 0.3s ease;
         }
+
         button:hover {
             background-color: #0056b3;
         }
+
         .tab {
             display: flex;
             justify-content: space-around;
-            background-color: #F2F2F7;
+            background-color: var(--background-color);
             padding: 10px 0;
-            position: fixed;
+            position: sticky;
             bottom: 0;
             width: 100%;
-            max-width: 414px;
         }
+
         .tab button {
             background-color: transparent;
             color: #8E8E93;
             border: none;
             outline: none;
             cursor: pointer;
-            padding: 14px 16px;
+            padding: 10px;
             transition: 0.3s;
-            font-size: 12px;
+            font-size: 14px;
             font-weight: 500;
             width: auto;
             margin-bottom: 0;
         }
+
         .tab button.active {
-            color: #007AFF;
+            color: var(--primary-color);
         }
+
         .tabcontent {
             display: none;
             padding: 20px 0;
         }
+
         #loginSection, #registerSection, #appSection {
             display: none;
         }
+
         .task {
             display: flex;
             align-items: center;
@@ -119,25 +146,48 @@
             border-radius: 10px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
+
         .task input[type="checkbox"] {
             margin-right: 12px;
             width: 20px;
             height: 20px;
         }
+
         #financialChart {
             margin-top: 20px;
+            width: 100%;
+            height: auto;
         }
+
         .auth-switch {
             text-align: center;
             margin-top: 20px;
         }
+
         .auth-switch a {
-            color: #007AFF;
+            color: var(--primary-color);
             text-decoration: none;
         }
+
         .error-message {
             color: #FF3B30;
             margin-bottom: 16px;
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                max-width: 768px;
+                margin: 0 auto;
+                box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            }
+
+            h1 {
+                font-size: 34px;
+            }
+
+            .tab {
+                position: static;
+            }
         }
     </style>
 </head>
@@ -215,286 +265,53 @@
     </div>
 
     <script>
-        // Configurare Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyAnUlM61mU26eN75AwphUEdgE-Tijei5Ag",
-            authDomain: "time-money-399cb.firebaseapp.com",
-            projectId: "time-money-399cb",
-            storageBucket: "time-money-399cb.appspot.com",
-            messagingSenderId: "35350837341",
-            appId: "1:35350837341:web:45a73cf3a143f8021435b4"
-        };
-
-        // Inițializare Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-
-        let currentUser = null;
-        let userData = {
-            tasks: [],
-            incomes: {},
-            expenses: {}
-        };
-
-        const loginSection = document.getElementById('loginSection');
-        const registerSection = document.getElementById('registerSection');
-        const appSection = document.getElementById('appSection');
-        const userNameSpan = document.getElementById('userName');
-
-        const loginButton = document.getElementById('loginButton');
-        const loginWithGoogleButton = document.getElementById('loginWithGoogleButton');
-        const registerButton = document.getElementById('registerButton');
-        const logoutButton = document.getElementById('logoutButton');
-        const showRegisterLink = document.getElementById('showRegister');
-        const showLoginLink = document.getElementById('showLogin');
-
-        loginButton.addEventListener('click', () => {
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            auth.signInWithEmailAndPassword(email, password)
-                .catch(error => {
-                    document.getElementById('loginError').textContent = error.message;
-                });
-        });
-
-        loginWithGoogleButton.addEventListener('click', () => {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider)
-                .catch(error => {
-                    document.getElementById('loginError').textContent = error.message;
-                });
-        });
-
-        registerButton.addEventListener('click', () => {
-            const email = document.getElementById('registerEmail').value;
-            const password = document.getElementById('registerPassword').value;
-            auth.createUserWithEmailAndPassword(email, password)
-                .catch(error => {
-                    document.getElementById('registerError').textContent = error.message;
-                });
-        });
-
-        logoutButton.addEventListener('click', () => {
-            auth.signOut().catch(error => {
-                console.error("Eroare la deconectare:", error);
-                alert("Eroare la deconectare. Vă rugăm să încercați din nou.");
-            });
-        });
-
-        showRegisterLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            loginSection.style.display = 'none';
-            registerSection.style.display = 'block';
-        });
-
-        showLoginLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            registerSection.style.display = 'none';
-            loginSection.style.display = 'block';
-        });
-
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                currentUser = user;
-                loginSection.style.display = 'none';
-                registerSection.style.display = 'none';
-                appSection.style.display = 'block';
-                userNameSpan.textContent = user.displayName || user.email;
-                loadUserData();
-            } else {
-                currentUser = null;
-                loginSection.style.display = 'block';
-                registerSection.style.display = 'none';
-                appSection.style.display = 'none';
-                userNameSpan.textContent = '';
-            }
-        });
-
-        function loadUserData() {
-            db.collection('users').doc(currentUser.uid).get().then(doc => {
-                if (doc.exists) {
-                    userData = doc.data();
-                } else {
-                    userData = {
-                        tasks: [],
-                        incomes: {},
-                        expenses: {}
-                    };
-                    db.collection('users').doc(currentUser.uid).set(userData);
-                }
-                renderTasks();
-                renderIncomes();
-                renderExpenses();
-                renderFinancialReport();
-            }).catch(error => {
-                console.error("Eroare la încărcarea datelor:", error);
-                alert("Eroare la încărcarea datelor. Vă rugăm să reîncărcați pagina.");
-            });
-        }
-
-        function saveUserData() {
-            db.collection('users').doc(currentUser.uid).set(userData)
-                .catch(error => {
-                    console.error("Eroare la salvarea datelor:", error);
-                    alert("Eroare la salvarea datelor. Vă rugăm să încercați din nou.");
-                });
-        }
-
-        function addTask() {
-            const taskInput = document.getElementById('newTask');
-            const taskText = taskInput.value.trim();
-            if (taskText) {
-                userData.tasks.push({ text: taskText, completed: false });
-                taskInput.value = '';
-                renderTasks();
-                saveUserData();
-            }
-        }
-
-        function renderTasks() {
-            const taskList = document.getElementById('taskList');
-            taskList.innerHTML = '';
-            userData.tasks.forEach((task, index) => {
-                const taskElement = document.createElement('div');
-                taskElement.className = 'task';
-                taskElement.innerHTML = `
-                    <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask(${index})">
-                    <span ${task.completed ? 'style="text-decoration: line-through;"' : ''}>${task.text}</span>
-                `;
-                taskList.appendChild(taskElement);
-            });
-        }
-
-        function toggleTask(index) {
-            userData.tasks[index].completed = !userData.tasks[index].completed;
-            renderTasks();
-            saveUserData();
-        }
-
-        const incomeCategories = ['Salarii', 'Donații', 'Parteneriate', 'Campanii de colectare', 'Contracte de servicii sau produse', 'Prestare servicii'];
-        const expenseCategories = ['Locuință', 'Alimente', 'Transport', 'Sănătate', 'Îmbrăcăminte și încălțăminte', 'Educație și dezvoltare personală', 'Divertisment și timp liber', '
-
-Asigurări și economii', 'Cadouri și donații', 'Datorii și împrumuturi', 'Cheltuieli personale'];
-
-        function populateCategories() {
-            const incomeSelect = document.getElementById('incomeCategory');
-            const expenseSelect = document.getElementById('expenseCategory');
-
-            incomeCategories.forEach(category => {
-                const option = document.createElement('option');
-                option.value = option.textContent = category;
-                incomeSelect.appendChild(option);
-            });
-
-            expenseCategories.forEach(category => {
-                const option = document.createElement('option');
-                option.value = option.textContent = category;
-                expenseSelect.appendChild(option);
-            });
-        }
-
-        populateCategories();
-
-        function addIncome() {
-            const category = document.getElementById('incomeCategory').value;
-            const amount = parseFloat(document.getElementById('incomeAmount').value);
-            if (category && amount) {
-                if (!userData.incomes[category]) {
-                    userData.incomes[category] = 0;
-                }
-                userData.incomes[category] += amount;
-                document.getElementById('incomeAmount').value = '';
-                renderIncomes();
-                saveUserData();
-            }
-        }
-
-        function renderIncomes() {
-            const incomeList = document.getElementById('incomeList');
-            incomeList.innerHTML = '<h3>Sumar încasări:</h3>';
-            for (const [category, amount] of Object.entries(userData.incomes)) {
-                incomeList.innerHTML += `<p>${category}: ${amount} RON</p>`;
-            }
-        }
-
-        function addExpense() {
-            const category = document.getElementById('expenseCategory').value;
-            const amount = parseFloat(document.getElementById('expenseAmount').value);
-            if (category && amount) {
-                if (!userData.expenses[category]) {
-                    userData.expenses[category] = 0;
-                }
-                userData.expenses[category] += amount;
-                document.getElementById('expenseAmount').value = '';
-                renderExpenses();
-                saveUserData();
-            }
-        }
-
-        function renderExpenses() {
-            const expenseList = document.getElementById('expenseList');
-            expenseList.innerHTML = '<h3>Sumar cheltuieli:</h3>';
-            for (const [category, amount] of Object.entries(userData.expenses)) {
-                expenseList.innerHTML += `<p>${category}: ${amount} RON</p>`;
-            }
-        }
-
-        function renderFinancialReport() {
-            const ctx = document.getElementById('financialChart').getContext('2d');
-            const totalIncome = Object.values(userData.incomes).reduce((a, b) => a + b, 0);
-            const totalExpense = Object.values(userData.expenses).reduce((a, b) => a + b, 0);
-
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['Încasări', 'Cheltuieli', 'Balanță'],
-                    datasets: [{
-                        label: 'Sumar Financiar',
-                        data: [totalIncome, totalExpense, totalIncome - totalExpense],
-                        backgroundColor: [
-                            'rgba(0, 122, 255, 0.2)',
-                            'rgba(255, 59, 48, 0.2)',
-                            'rgba(52, 199, 89, 0.2)'
-                        ],
-                        borderColor: [
-                            'rgba(0, 122, 255, 1)',
-                            'rgba(255, 59, 48, 1)',
-                            'rgba(52, 199, 89, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        }
-
-        function openTab(evt, tabName) {
-            var i, tabcontent, tablinks;
-            tabcontent = document.getElementsByClassName("tabcontent");
-            for (i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].style.display = "none";
-            }
-            tablinks = document.getElementsByClassName("tablinks");
-            for (i = 0; i < tablinks.length; i++) {
-                tablinks[i].className = tablinks[i].className.replace(" active", "");
-            }
-            document.getElementById(tabName).style.display = "block";
-            evt.currentTarget.className += " active";
-
-            if (tabName === 'Raport') {
-                renderFinancialReport();
-            }
-        }
-
-        // Deschide tab-ul "Sarcini" în mod implicit
         document.addEventListener('DOMContentLoaded', (event) => {
+            const loginSection = document.getElementById('loginSection');
+            const registerSection = document.getElementById('registerSection');
+            const appSection = document.getElementById('appSection');
+            const userNameSpan = document.getElementById('userName');
+
+            loginSection.style.display = 'block';
+            registerSection.style.display = 'none';
+            appSection.style.display = 'none';
+
+            document.getElementById('loginButton').addEventListener('click', () => {
+                loginSection.style.display = 'none';
+                appSection.style.display = 'block';
+                userNameSpan.textContent = 'Utilizator';
+            });
+
+            document.getElementById('showRegister').addEventListener('click', (e) => {
+                e.preventDefault();
+                loginSection.style.display = 'none';
+                registerSection.style.display = 'block';
+            });
+
+            document.getElementById('showLogin').addEventListener('click', (e) => {
+                e.preventDefault();
+                registerSection.style.display = 'none';
+                loginSection.style.display = 'block';
+            });
+
+            document.getElementById('logoutButton').addEventListener('click', () => {
+                appSection.style.display = 'none';
+                loginSection.style.display = 'block';
+            });
+
+            function openTab(evt, tabName) {
+                var i, tabcontent, tablinks;
+                tabcontent = document.getElementsByClassName("tabcontent");
+                for (i = 0; i < tabcontent.length; i++) {
+                    tabcontent[i].style.display = "none";
+                }
+                tablinks = document.getElementsByClassName("tablinks");
+                for (i = 0; i < tablinks.length; i++) {
+                    tablinks[i].className = tablinks[i].className.replace(" active", "");
+                }
+                document.getElementById(tabName).style.display = "block";
+                evt.currentTarget.className += " active";
+            }
+
             document.getElementsByClassName("tablinks")[0].click();
         });
     </script>
