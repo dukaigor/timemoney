@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TimeMoney</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #333;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .tab {
+            overflow: hidden;
+            border: 1px solid #ccc;
+            background-color: #f1f1f1;
+        }
+        .tab button {
+            background-color: inherit;
+            float: left;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            transition: 0.3s;
+        }
+        .tab button:hover {
+            background-color: #ddd;
+        }
+        .tab button.active {
+            background-color: #ccc;
+        }
+        .tabcontent {
+            display: none;
+            padding: 6px 12px;
+            border: 1px solid #ccc;
+            border-top: none;
+        }
+        #loginSection, #appSection {
+            display: none;
+        }
+        .task {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .task input[type="checkbox"] {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="loginSection">
+            <h1>Bun venit la TimeMoney</h1>
+            <button id="loginButton">Conectare cu Google</button>
+        </div>
+
+        <div id="appSection">
+            <h1>Bine ați venit, <span id="userName"></span>!</h1>
+            <button id="logoutButton">Deconectare</button>
+
+            <div class="tab">
+                <button class="tablinks" onclick="openTab(event, 'Sarcini')">Sarcini</button>
+                <button class="tablinks" onclick="openTab(event, 'Incasari')">Încasări</button>
+                <button class="tablinks" onclick="openTab(event, 'Cheltuieli')">Cheltuieli</button>
+                <button class="tablinks" onclick="openTab(event, 'Raport')">Raport</button>
+            </div>
+
+            <div id="Sarcini" class="tabcontent">
+                <h2>Lista de sarcini</h2>
+                <input type="text" id="newTask" placeholder="Adaugă o sarcină nouă">
+                <button onclick="addTask()">Adaugă sarcină</button>
+                <div id="taskList"></div>
+            </div>
+
+            <div id="Incasari" class="tabcontent">
+                <h2>Încasări</h2>
+                <select id="incomeCategory"></select>
+                <input type="number" id="incomeAmount" placeholder="Suma">
+                <button onclick="addIncome()">Adaugă încasare</button>
+                <div id="incomeList"></div>
+            </div>
+
+            <div id="Cheltuieli" class="tabcontent">
+                <h2>Cheltuieli</h2>
+                <select id="expenseCategory"></select>
+                <input type="number" id="expenseAmount" placeholder="Suma">
+                <button onclick="addExpense()">Adaugă cheltuială</button>
+                <div id="expenseList"></div>
+            </div>
+
+            <div id="Raport" class="tabcontent">
+                <h2>Raport Financiar</h2>
+                <canvas id="financialChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configurare Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAnUlM61mU26eN75AwphUEdgE-Tijei5Ag",
+            authDomain: "time-money-399cb.firebaseapp.com",
+            projectId: "time-money-399cb",
+            storageBucket: "time-money-399cb.appspot.com",
+            messagingSenderId: "35350837341",
+            appId: "1:35350837341:web:45a73cf3a143f8021435b4"
+        };
+
+        // Inițializare Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let currentUser = null;
+        let userData = {
+            tasks: [],
+            incomes: {},
+            expenses: {}
+        };
+
+        const loginButton = document.getElementById('loginButton');
+        const logoutButton = document.getElementById('logoutButton');
+        const loginSection = document.getElementById('loginSection');
+        const appSection = document.getElementById('appSection');
+        const userNameSpan = document.getElementById('userName');
+
+        loginButton.addEventListener('click', () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider);
+        });
+
+        logoutButton.addEventListener('click', () => {
+            auth.signOut();
+        });
+
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                currentUser = user;
+                loginSection.style.display = 'none';
+                appSection.style.display = 'block';
+                userNameSpan.textContent = user.displayName;
+                loadUserData();
+            } else {
+                currentUser = null;
+                loginSection.style.display = 'block';
+                appSection.style.display = 'none';
+                userNameSpan.textContent = '';
+            }
+        });
+
+        function loadUserData() {
+            db.collection('users').doc(currentUser.uid).get().then(doc => {
+                if (doc.exists) {
+                    userData = doc.data();
+                    renderTasks();
+                    renderIncomes();
+                    renderExpenses();
+                    renderFinancialReport();
+                } else {
+                    db.collection('users').doc(currentUser.uid).set(userData);
+                }
+            });
+        }
+
+        function saveUserData() {
+            db.collection('users').doc(currentUser.uid).set(userData);
+        }
+
+        function addTask() {
+            const taskInput = document.getElementById('newTask');
+            const taskText = taskInput.value.trim();
+            if (taskText) {
+                userData.tasks.push({ text: taskText, completed: false });
+                taskInput.value = '';
+                renderTasks();
+                saveUserData();
+            }
+        }
+
+        function renderTasks() {
+            const taskList = document.getElementById('taskList');
+            taskList.innerHTML = '';
+            userData.tasks.forEach((task, index) => {
+                const taskElement = document.createElement('div');
+                taskElement.className = 'task';
+                taskElement.innerHTML = `
+                    <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask(${index})">
+                    <span ${task.completed ? 'style="text-decoration: line-through;"' : ''}>${task.text}</span>
+                `;
+                taskList.appendChild(taskElement);
+            });
+        }
+
+        function toggleTask(index) {
+            userData.tasks[index].completed = !userData.tasks[index].completed;
+            renderTasks();
+            saveUserData();
+        }
+
+        const incomeCategories = ['Salarii', 'Donații', 'Parteneriate', 'Campanii de colectare', 'Contracte de servicii sau produse', 'Prestare servicii'];
+        const expenseCategories = ['Locuință', 'Alimente', 'Transport', 'Sănătate', 'Îmbrăcăminte și încălțăminte', 'Educație și dezvoltare personală', 'Divertisment și timp liber', 'Asigurări și economii', 'Cadouri și donații', 'Datorii și împrumuturi', 'Cheltuieli personale'];
+
+        function populateCategories() {
+            const incomeSelect = document.getElementById('incomeCategory');
+            const expenseSelect = document.getElementById('expenseCategory');
+
+            incomeCategories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = option.textContent = category;
+                incomeSelect.appendChild(option);
+            });
+
+            expenseCategories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = option.textContent = category;
+                expenseSelect.appendChild(option);
+            });
+        }
+
+        populateCategories();
+
+        function addIncome() {
+            const category = document.getElementById('incomeCategory').value;
+            const amount = parseFloat(document.getElementById('incomeAmount').value);
+            if (category && amount) {
+                if (!userData.incomes[category]) {
+                    userData.incomes[category] = 0;
+                }
+                userData.incomes[category] += amount;
+                document.getElementById('incomeAmount').value = '';
+                renderIncomes();
+                saveUserData();
+            }
+        }
+
+        function renderIncomes() {
+            const incomeList = document.getElementById('incomeList');
+            incomeList.innerHTML = '<h3>Sumar încasări:</h3>';
+            for (const [category, amount] of Object.entries(userData.incomes)) {
+                incomeList.innerHTML += `<p>${category}: ${amount} RON</p>`;
+            }
+        }
+
+        function addExpense() {
+            const category = document.getElementById('expenseCategory').value;
+            const amount = parseFloat(document.getElementById('expenseAmount').value);
+            if (category && amount) {
+                if (!userData.expenses[category]) {
+                    userData.expenses[category] = 0;
+                }
+                userData.expenses[category] += amount;
+                document.getElementById('expenseAmount').value = '';
+                renderExpenses();
+                saveUserData();
+            }
+        }
+
+        function renderExpenses() {
+            const expenseList = document.getElementById('expenseList');
+            expenseList.innerHTML = '<h3>Sumar cheltuieli:</h3>';
+            for (const [category, amount] of Object.entries(userData.expenses)) {
+                expenseList.innerHTML += `<p>${category}: ${amount} RON</p>`;
+            }
+        }
+
+        function renderFinancialReport() {
+            const ctx = document.getElementById('financialChart').getContext('2d');
+            const totalIncome = Object.values(userData.incomes).reduce((a, b) => a + b, 0);
+            const totalExpense = Object.values(userData.expenses).reduce((a, b) => a + b, 0);
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Încasări', 'Cheltuieli', 'Balanță'],
+                    datasets: [{
+                        label: 'Sumar Financiar',
+                        data: [totalIncome, totalExpense, totalIncome - totalExpense],
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(255, 206, 86, 0.2)'
+                        ],
+                        borderColor: [
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(255, 206, 86, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tablinks");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+
+            if (tabName === 'Raport') {
+                renderFinancialReport();
+            }
+        }
+
+        // Deschide tab-ul "Sarcini" în mod implicit
+        document.getElementsByClassName("tablinks")[0].click();
+    </script>
+</body>
+</html>
